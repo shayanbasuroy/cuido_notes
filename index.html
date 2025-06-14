@@ -1103,7 +1103,7 @@
       let tutorialActive = false;
 
       // Gemini API Key - This will be injected by the environment
-      const GEMINI_API_KEY = "";
+      const GEMINI_API_KEY = "AIzaSyCK83VJUG-NWzNJWBgNGxM3Ze6i-SEAUP0";
       const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
 
       // Global variable to store context for solving
@@ -1769,9 +1769,9 @@
         if (selection.rangeCount > 0) {
           const range = selection.getRangeAt(0);
           const currentNode =
-            range.startContainer.nodeType === Node.TEXT_NODE
-              ? range.startContainer.parentNode
-              : range.startContainer;
+            range.startContainer.nodeType === Node.ELEMENT_NODE
+              ? range.startContainer
+              : range.startContainer.parentNode;
           const parentChecklistItem = currentNode.closest(
             'li[role="checkbox"]'
           );
