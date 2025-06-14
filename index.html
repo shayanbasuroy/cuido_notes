@@ -1,0 +1,2894 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Notes - Liquid Glass</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        transition: background-color 0.3s ease, background-image 0.3s ease,
+          color 0.3s ease;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 10vh; /* Reduced min-height for better fit in Canvas */
+        margin: 0;
+        padding: 20px;
+        box-sizing: border-box;
+        background-image: linear-gradient(
+          135deg,
+          #a8c0ff,
+          #3f2b96
+        ); /* Light mode gradient */
+        background-color: #f0f2f5; /* Light mode default */
+        color: #1a202c; /* Default text color for light mode */
+      }
+
+      /* Dark mode styles */
+      body.dark {
+        background-image: linear-gradient(
+          135deg,
+          #2c3e50,
+          #1a2a3a
+        ); /* Darker gradient */
+        background-color: #1a202c; /* Dark mode background */
+        color: #e2e8f0; /* Lighter text in dark mode */
+      }
+
+      /* Custom scrollbar for better aesthetics */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+      }
+      body.dark ::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.2);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 10px;
+      }
+      body.dark ::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.1);
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.5);
+      }
+      body.dark ::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+
+      /* Liquid Glass effect for elements */
+      .glass-effect {
+        background-color: rgba(
+          255,
+          255,
+          255,
+          0.15
+        ); /* Slightly translucent white */
+        backdrop-filter: blur(18px); /* Increased blur */
+        -webkit-backdrop-filter: blur(18px); /* For Safari support */
+        border: 1px solid rgba(255, 255, 255, 0.25); /* Subtle white border */
+        box-shadow: 0 6px 35px rgba(0, 0, 0, 0.15); /* Softer, wider shadow */
+        border-radius: 24px; /* More rounded corners */
+        transition: background-color 0.3s ease, border-color 0.3s ease,
+          box-shadow 0.3s ease;
+      }
+
+      /* Dark mode for glass effect */
+      body.dark .glass-effect {
+        background-color: rgba(
+          0,
+          0,
+          0,
+          0.25
+        ); /* Darker translucent for dark mode */
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 6px 35px rgba(0, 0, 0, 0.4);
+      }
+
+      /* Content editable styling and input adjustments for dark mode */
+      .note-content-editable:focus {
+        outline: none;
+      }
+      .note-content-editable ul {
+        list-style-type: none;
+        padding-left: 0;
+      }
+      .note-content-editable ul li {
+        position: relative;
+        margin-bottom: 8px;
+        padding-left: 25px;
+        cursor: text; /* Indicate editable text */
+      }
+      /* Custom checkbox style */
+      .note-content-editable ul li[role="checkbox"]::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 5px; /* Adjust as needed */
+        width: 18px;
+        height: 18px;
+        border: 2px solid rgba(255, 255, 255, 0.7);
+        border-radius: 4px;
+        background-color: rgba(255, 255, 255, 0.2);
+        cursor: pointer;
+        transition: border-color 0.3s ease, background-color 0.3s ease;
+      }
+      body.dark .note-content-editable ul li[role="checkbox"]::before {
+        border: 2px solid rgba(255, 255, 255, 0.4);
+        background-color: rgba(255, 255, 255, 0.05);
+      }
+      .note-content-editable ul li[aria-checked="true"] {
+        color: rgba(255, 255, 255, 0.6);
+        text-decoration: line-through;
+      }
+      body.dark .note-content-editable ul li[aria-checked="true"] {
+        color: rgba(255, 255, 255, 0.5);
+      }
+      .note-content-editable ul li[aria-checked="true"]::after {
+        content: "✓";
+        position: absolute;
+        left: 3px; /* Adjust as needed */
+        top: 4px; /* Adjust as needed */
+        font-size: 14px;
+        color: #4caf50; /* Green checkmark */
+      }
+      .note-content-editable ul li[aria-checked="true"]::before {
+        border-color: #4caf50; /* Green border for completed */
+        background-color: rgba(76, 175, 80, 0.3);
+      }
+
+      /* Input specific styling */
+      input[type="text"],
+      .note-content-editable,
+      textarea {
+        /* Added textarea for AI prompt modal */
+        background-color: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.2);
+        color: inherit; /* Inherit from body for dark/light mode */
+        transition: background-color 0.3s ease, border-color 0.3s ease,
+          color 0.3s ease;
+      }
+      input[type="text"]::placeholder,
+      textarea::placeholder {
+        color: rgba(255, 255, 255, 0.7);
+      }
+      body.dark input[type="text"]::placeholder,
+      body.dark textarea::placeholder {
+        color: #cbd5e0;
+      }
+      body.dark input[type="text"],
+      body.dark .note-content-editable,
+      body.dark textarea {
+        background-color: rgba(255, 255, 255, 0.05);
+        border-color: rgba(255, 255, 255, 0.1);
+      }
+
+      /* Sketch Modal Styling */
+      .sketch-modal-overlay,
+      .ai-prompt-modal-overlay,
+      .custom-alert-modal-overlay,
+      .ai-template-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 100;
+        /* Add animation for overlay */
+        animation: fadeIn 0.3s ease-out forwards;
+      }
+      .sketch-modal-content,
+      .ai-prompt-modal-content,
+      .custom-alert-modal-content,
+      .ai-template-modal-content {
+        background-color: rgba(255, 255, 255, 0.25);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 20px; /* More rounded */
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        width: 90%;
+        max-width: 800px;
+        max-height: 600px;
+        overflow: hidden;
+        /* Add animation for content */
+        animation: fadeInScale 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)
+          forwards;
+      }
+      body.dark .sketch-modal-content,
+      body.dark .ai-prompt-modal-content,
+      body.dark .custom-alert-modal-content,
+      body.dark .ai-template-modal-content {
+        background-color: rgba(0, 0, 0, 0.35);
+      }
+      #sketchCanvas {
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        background-color: rgba(255, 255, 255, 0.9);
+        touch-action: none; /* Prevent scrolling on touch */
+        border-radius: 12px; /* Rounded corners for canvas */
+      }
+      body.dark #sketchCanvas {
+        background-color: rgba(50, 50, 50, 0.9); /* Darker canvas background */
+      }
+
+      /* Base pane visibility - Left pane always visible, right pane hidden on mobile initially */
+      .left-pane {
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+        width: 100%; /* Full width on mobile by default */
+        transition: all 0.5s ease-in-out; /* Add transition for pane changes */
+      }
+      .right-pane {
+        display: none; /* Hidden on mobile by default */
+        flex-direction: column;
+        width: 100%; /* Take full width when visible on mobile */
+        transition: all 0.5s ease-in-out; /* Add transition for pane changes */
+      }
+
+      /* Desktop specific layout */
+      @media (min-width: 768px) {
+        /* md breakpoint */
+        .left-pane {
+          display: flex !important; /* Always show on desktop */
+          width: calc(100% / 3); /* md:w-1/3 */
+          margin-right: 1rem; /* md:mr-4 */
+        }
+        .right-pane {
+          display: flex !important; /* Always show on desktop */
+          width: calc(100% * 2 / 3); /* md:w-2/3 */
+        }
+        .mobile-back-button {
+          /* Hide back button on desktop */
+          display: none !important;
+        }
+        .fullscreen-toggle-button {
+          /* Show fullscreen button on desktop */
+          display: inline-flex !important;
+        }
+        #tutorialButton {
+          /* Show tutorial button on desktop */
+          display: inline-flex !important;
+        }
+      }
+
+      /* State when no notes exist */
+      .main-container.no-notes .right-pane {
+        display: none !important;
+      }
+      .main-container.no-notes .left-pane {
+        width: 100% !important;
+        margin-right: 0 !important;
+        flex-grow: 1;
+        justify-content: center;
+        align-items: center;
+      }
+      .main-container.no-notes #newNoteAndListWrapper {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+      }
+      .main-container.no-notes #notesList {
+        flex-grow: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+      .main-container.no-notes #newNoteBtn {
+        margin-top: auto;
+        margin-bottom: auto;
+      }
+
+      /* State when a note is active on mobile */
+      .main-container.mobile-note-active .left-pane {
+        display: none !important;
+      }
+      .main-container.mobile-note-active .right-pane {
+        display: flex !important;
+        width: 100% !important;
+        margin-right: 0 !important;
+      }
+
+      /* Fullscreen mode (desktop-only, but CSS applies universally if class is present) */
+      .main-container.fullscreen {
+        flex-direction: row !important;
+        padding: 0 !important;
+        border-radius: 0 !important;
+        height: 100vh !important;
+        max-width: 100vw !important;
+      }
+      .main-container.fullscreen .glass-effect {
+        border-radius: 0 !important;
+      }
+      .main-container.fullscreen .left-pane {
+        display: none !important;
+      }
+      .main-container.fullscreen .right-pane {
+        width: 100% !important;
+        margin-right: 0 !important;
+      }
+
+      .ai-loading-indicator {
+        margin-left: 10px;
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.7);
+        display: none; /* Hidden by default */
+      }
+      .ai-loading-indicator.active {
+        display: inline-block;
+        animation: pulseOpacity 1.5s infinite ease-in-out;
+      }
+
+      /* Tutorial Overlay Styles */
+      .tutorial-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+        animation: fadeIn 0.3s ease-out forwards;
+      }
+
+      .tutorial-content {
+        background-color: rgba(255, 255, 255, 0.25);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 20px;
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        padding: 30px;
+        max-width: 500px;
+        color: #e2e8f0;
+        text-align: center;
+        position: relative;
+        z-index: 1001; /* Above the highlight */
+        animation: fadeInScale 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)
+          forwards;
+      }
+
+      body.dark .tutorial-content {
+        background-color: rgba(0, 0, 0, 0.35);
+      }
+
+      .tutorial-highlight {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border-radius: 12px;
+        box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5),
+          0 0 15px 5px rgba(255, 255, 0, 0.8);
+        transition: all 0.4s ease-in-out; /* Smooth transition for position and size */
+        z-index: 999;
+        pointer-events: none;
+      }
+      .tutorial-highlight.active {
+        pointer-events: auto;
+      }
+
+      .tutorial-text {
+        font-size: 1.1rem;
+        margin-bottom: 20px;
+      }
+
+      .tutorial-buttons {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      .tutorial-buttons button {
+        background-color: rgba(255, 255, 255, 0.2);
+        color: white;
+        padding: 8px 15px;
+        border-radius: 8px;
+        transition: background-color 0.2s ease, transform 0.1s ease;
+        cursor: pointer;
+      }
+      .tutorial-buttons button:hover {
+        background-color: rgba(255, 255, 255, 0.3);
+        transform: scale(1.02);
+      }
+      .tutorial-buttons button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: scale(1); /* Prevent scale on disabled */
+      }
+
+      /* Animations Keyframes */
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      @keyframes fadeInScale {
+        from {
+          opacity: 0;
+          transform: scale(0.9);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      @keyframes fadeOutScale {
+        from {
+          opacity: 1;
+          transform: scale(1);
+        }
+        to {
+          opacity: 0;
+          transform: scale(0.9);
+        }
+      }
+
+      @keyframes pulseOpacity {
+        0% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+        100% {
+          opacity: 1;
+        }
+      }
+
+      /* Button specific hover animations */
+      button,
+      .note-item,
+      input[type="text"] {
+        transition: all 0.2s ease-out; /* General transition for interactive elements */
+      }
+
+      button:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      .note-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        background-color: rgba(255, 255, 255, 0.25);
+      }
+
+      body.dark .note-item:hover {
+        background-color: rgba(0, 0, 0, 0.35);
+      }
+
+      /* Active format button style */
+      .format-btn.active-format {
+        background-color: rgba(255, 255, 255, 0.3);
+        border-color: rgba(255, 255, 255, 0.4);
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      body.dark .format-btn.active-format {
+        background-color: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.25);
+      }
+    </style>
+  </head>
+  <body class="text-white">
+    <div
+      id="mainContainer"
+      class="flex flex-col md:flex-row w-full max-w-7xl h-[90vh] glass-effect p-4 md:p-6 rounded-3xl overflow-hidden"
+    >
+      <div
+        class="left-pane flex flex-col w-full p-4 md:p-6 glass-effect rounded-2xl shadow-inner mr-0 mb-4 md:mb-0 overflow-hidden"
+      >
+        <div class="flex justify-between items-center mb-6">
+          <h1 class="text-3xl font-bold text-white">Notes</h1>
+          <div class="flex gap-2">
+            <button
+              id="tutorialButton"
+              title="Start Tutorial"
+              class="inline-flex items-center justify-center bg-white/20 hover:bg-white/30 text-white p-2 rounded-full transition duration-300 ease-in-out shadow-sm"
+            >
+              <svg
+                class="w-6 h-6"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"
+                />
+              </svg>
+            </button>
+            <button
+              id="darkModeToggle"
+              title="Toggle Dark/Light Mode"
+              class="inline-flex items-center justify-center bg-white/20 hover:bg-white/30 text-white p-2 rounded-full transition duration-300 ease-in-out shadow-sm"
+            >
+              <svg
+                id="sunIcon"
+                class="w-6 h-6"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M12 2.5c-5.25 0-9.5 4.25-9.5 9.5S6.75 21.5 12 21.5 21.5 17.25 21.5 12 17.25 2.5 12 2.5zM12 20c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zM13 1h-2v3h2V1zm-1 18h-1v-3h1v3zm6.36-11.36l-1.41-1.41 2.12-2.12 1.41 1.41-2.12 2.12zM4.22 4.22L2.81 5.63 4.93 7.75 6.34 6.34 4.22 4.22zm15.56 12.01l-1.41 1.41-2.12-2.12 1.41-1.41 2.12 2.12zM7.75 4.93L5.63 2.81 4.22 4.22 6.34 6.34 7.75 4.93zm-3.54 11.36l1.41 1.41-2.12 2.12-1.41-1.41 2.12-2.12z"
+                />
+              </svg>
+              <svg
+                id="moonIcon"
+                class="w-6 h-6 hidden"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M12.35 2.5C7.09 2.5 2.5 7.09 2.5 12.35S7.09 22.2 12.35 22.2c.45 0 .89-.04 1.33-.11.4-.06.77-.21 1.13-.42.36-.21.68-.48.97-.8.29-.32.54-.69.75-1.1.21-.4.36-.83.42-1.27.07-.44.11-.88.11-1.33 0-5.25-4.25-9.5-9.5-9.5zM12.35 20.2c-4.32 0-7.85-3.53-7.85-7.85S8.03 4.5 12.35 4.5c.3 0 .59.02.88.07.41.07.8.23 1.15.46.35.23.66.52.92.86.26.34.47.72.63 1.13.16.41.27.85.31 1.3.05.45.07.9.07 1.35 0 4.32-3.53 7.85-7.85 7.85z"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="relative mb-4" id="searchBarContainer">
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="Search notes..."
+            class="w-full p-3 pl-10 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/70 focus:ring-2 focus:ring-white/50 focus:outline-none"
+            title="Search your notes by title or content."
+          />
+          <div
+            class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+          >
+            <svg
+              class="w-5 h-5 text-white/70"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              ></path>
+            </svg>
+          </div>
+        </div>
+
+        <div id="newNoteAndListWrapper" class="flex flex-col flex-grow">
+          <button
+            id="newNoteBtn"
+            title="Create a New Note"
+            class="flex items-center justify-center bg-white/20 hover:bg-white/30 text-white font-medium py-3 px-4 rounded-xl transition duration-300 ease-in-out mb-4 shadow-md w-fit mx-auto"
+          >
+            <svg
+              class="w-5 h-5 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+              ></path>
+            </svg>
+            New Note
+          </button>
+
+          <div id="notesList" class="flex-grow overflow-y-auto pr-2"></div>
+        </div>
+      </div>
+
+      <div
+        class="right-pane flex flex-col w-full p-4 md:p-6 glass-effect rounded-2xl shadow-inner relative overflow-hidden"
+      >
+        <button
+          id="mobileBackButton"
+          title="Back to Notes List"
+          class="mobile-back-button flex items-center bg-white/20 hover:bg-white/30 text-white font-medium py-2 px-3 rounded-lg transition duration-300 ease-in-out shadow-sm mb-4"
+        >
+          <svg
+            class="w-5 h-5 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M10 19l-7-7m0 0l7-7m-7 7h18"
+            ></path>
+          </svg>
+          Back to Notes
+        </button>
+
+        <div
+          id="formattingToolbar"
+          class="flex flex-wrap gap-2 mb-4 p-2 bg-white/10 rounded-xl shadow-inner"
+        >
+          <button
+            class="format-btn bg-white/20 hover:bg-white/30 text-white font-medium py-2 px-3 rounded-lg transition duration-300 ease-in-out shadow-sm"
+            data-command="bold"
+            id="boldButton"
+            title="Bold Text"
+          >
+            <svg
+              class="w-5 h-5"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M8 11h2c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2H8c-1.1 0-2 .9-2 2v2c0 1.1.9 2 2 2zm2 2H8c-1.1 0-2 .9-2 2v2c0 1.1.9 2 2 2h2c1.1 0 2-.9 2-2v-2c0-1.1-.9-2-2-2z"
+              />
+            </svg>
+          </button>
+          <button
+            class="format-btn bg-white/20 hover:bg-white/30 text-white font-medium py-2 px-3 rounded-lg transition duration-300 ease-in-out shadow-sm"
+            data-command="italic"
+            id="italicButton"
+            title="Italic Text"
+          >
+            <svg
+              class="w-5 h-5"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M10 5.5l6 13h-2.5l-1.5-3.5h-4.5l-1.5 3.5H4l6-13zM10.25 10.75h3.5l-1.75-4-1.75 4z"
+              />
+            </svg>
+          </button>
+          <button
+            class="format-btn bg-white/20 hover:bg-white/30 text-white font-medium py-2 px-3 rounded-lg transition duration-300 ease-in-out shadow-sm"
+            data-command="underline"
+            id="underlineButton"
+            title="Underline Text"
+          >
+            <svg
+              class="w-5 h-5"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 17c3.31 0 6-2.69 6-6V3h-2v8c0 2.21-1.79 4-4 4s-4-1.79-4-4V3H6v8c0 3.31 2.69 6 6 6zM5 19h14v2H5z"
+              />
+            </svg>
+          </button>
+          <button
+            class="format-btn bg-white/20 hover:bg-white/30 text-white font-medium py-2 px-3 rounded-lg transition duration-300 ease-in-out shadow-sm"
+            data-command="strikethrough"
+            id="strikethroughButton"
+            title="Strikethrough Text"
+          >
+            <svg
+              class="w-5 h-5"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path d="M10 19h4v-2h-4v2zm-3-5h10v-2H7v2zM5 5h14v2H5V5z" />
+            </svg>
+          </button>
+          <button
+            id="checklistBtn"
+            title="Toggle Checklist Item"
+            class="bg-white/20 hover:bg-white/30 text-white font-medium py-2 px-3 rounded-lg transition duration-300 ease-in-out shadow-sm"
+          >
+            <svg
+              class="w-5 h-5"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2zm0-4H7V7h10v2z"
+              />
+            </svg>
+          </button>
+          <button
+            id="addSketchBtn"
+            title="Add a Sketch"
+            class="bg-white/20 hover:bg-white/30 text-white font-medium py-2 px-3 rounded-lg transition duration-300 ease-in-out shadow-sm"
+          >
+            <svg
+              class="w-5 h-5"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M14.06 9.06L15 8l1.5 1.5-1.5 1.5zm-4.78 6.47c-.08.08-.13.18-.15.28l-.05.21c-.02.08-.04.16-.04.24v.26l.29.29h.26c.08 0 .16-.02.24-.04l.21-.05c.1-.02.2-.07.28-.15L15.94 9.06l-1.41-1.41-5.69 5.69zm-2.01-2.01L14.06 9.06zM7 17.5V19h1.5L16.29 11.21l-1.41-1.41L7 17.5z"
+              />
+            </svg>
+          </button>
+          <button
+            id="aiCorrectBtn"
+            title="Correct Grammar & Spelling"
+            class="bg-blue-500/80 hover:bg-blue-600 text-white font-medium py-2 px-3 rounded-lg transition duration-300 ease-in-out shadow-sm"
+          >
+            AI Correct
+          </button>
+          <button
+            id="aiCompleteBtn"
+            title="AI Complete Note"
+            class="bg-purple-500/80 hover:bg-purple-600 text-white font-medium py-2 px-3 rounded-lg transition duration-300 ease-in-out shadow-sm"
+          >
+            AI Complete
+          </button>
+          <button
+            id="aiTemplateBtn"
+            title="Generate AI Note Template"
+            class="bg-yellow-500/80 hover:bg-yellow-600 text-white font-medium py-2 px-3 rounded-lg transition duration-300 ease-in-out shadow-sm"
+          >
+            AI Template
+          </button>
+
+          <button
+            id="fullscreenToggleBtn"
+            title="Toggle Fullscreen"
+            class="fullscreen-toggle-button bg-white/20 hover:bg-white/30 text-white font-medium py-2 px-3 rounded-lg transition duration-300 ease-in-out shadow-sm hidden md:inline-flex"
+          >
+            <svg
+              id="fullscreenEnterIcon"
+              class="w-5 h-5"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"
+              />
+            </svg>
+            <svg
+              id="fullscreenExitIcon"
+              class="w-5 h-5 hidden"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"
+              />
+            </svg>
+          </button>
+          <span id="aiLoadingIndicator" class="ai-loading-indicator"
+            >Processing...</span
+          >
+        </div>
+
+        <input
+          type="text"
+          id="noteTitle"
+          placeholder="Select a note or create a new one..."
+          class="w-full p-3 mb-4 rounded-xl bg-white/10 border border-white/20 text-white text-2xl font-semibold placeholder-white/70 focus:ring-2 focus:ring-white/50 focus:outline-none"
+          disabled
+        />
+
+        <div
+          id="noteContent"
+          class="note-content-editable flex-grow overflow-y-auto pr-2 text-lg leading-relaxed bg-white/10 p-4 rounded-xl border border-white/20 focus:ring-2 focus:ring-white/50 focus:outline-none"
+          contenteditable="true"
+          disabled
+        >
+          <p class="text-white/70">Select a note or create a new one...</p>
+        </div>
+
+        <div class="flex justify-end gap-3 mt-4">
+          <button
+            id="saveNoteBtn"
+            title="Save Current Note"
+            class="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-xl transition duration-300 ease-in-out shadow-md"
+            disabled
+          >
+            Save Note
+          </button>
+          <button
+            id="deleteNoteBtn"
+            title="Delete Current Note"
+            class="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-xl transition duration-300 ease-in-out shadow-md"
+            disabled
+          >
+            Delete Note
+          </button>
+        </div>
+      </div>
+
+      <div
+        id="customMessageModal"
+        class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 custom-alert-modal-overlay"
+      >
+        <div
+          class="bg-white/20 glass-effect p-8 rounded-2xl shadow-lg text-center w-80 custom-alert-modal-content"
+        >
+          <p
+            id="customMessageText"
+            class="text-xl font-semibold mb-6 text-white"
+          ></p>
+          <div class="flex justify-center gap-4">
+            <button
+              id="customMessageConfirmBtn"
+              class="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition duration-300 ease-in-out hidden"
+            >
+              Confirm
+            </button>
+            <button
+              id="customMessageCloseBtn"
+              class="bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-4 rounded-lg transition duration-300 ease-in-out"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="sketchModal" class="sketch-modal-overlay hidden">
+        <div class="sketch-modal-content">
+          <h2 class="text-2xl font-bold mb-4 text-white">Draw your Sketch</h2>
+          <div class="flex flex-wrap gap-2 mb-4">
+            <input
+              type="color"
+              id="colorPicker"
+              value="#000000"
+              class="w-10 h-10 rounded-full border border-white/30 cursor-pointer"
+              title="Pick a drawing color"
+            />
+            <input
+              type="range"
+              id="lineWidth"
+              min="1"
+              max="10"
+              value="3"
+              class="w-24 range-lg"
+              title="Adjust brush size"
+            />
+            <button
+              id="eraserBtn"
+              title="Erase"
+              class="bg-white/20 hover:bg-white/30 text-white font-medium py-2 px-3 rounded-lg transition duration-300 ease-in-out shadow-sm"
+            >
+              <svg
+                class="w-5 h-5"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M16.24 3.76a2.5 2.5 0 013.54 3.54L9.88 19.16a2.5 2.5 0 01-3.54 0L3.76 16.24a2.5 2.5 0 010-3.54L13.88 3.76z"
+                />
+              </svg>
+            </button>
+            <button
+              id="clearSketchBtn"
+              title="Clear Sketch"
+              class="bg-red-500/80 hover:bg-red-600 text-white font-medium py-2 px-3 rounded-lg transition duration-300 ease-in-out shadow-sm"
+            >
+              <svg
+                class="w-5 h-5"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zm2.46-7.12l1.41-1.41L12 12.59l2.12-2.12 1.41 1.41L13.41 14l2.12 2.12-1.41 1.41L12 15.41l-2.12 2.12-1.41-1.41L10.59 14l-2.13-2.12zM15.5 4l-1-1h-5l-1 1H5v2h14V4z"
+                />
+              </svg>
+            </button>
+          </div>
+          <canvas
+            id="sketchCanvas"
+            class="flex-grow w-full rounded-xl mb-4"
+          ></canvas>
+          <div class="flex justify-end gap-3">
+            <button
+              id="saveSketchBtn"
+              title="Save Sketch and Close"
+              class="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-xl transition duration-300 ease-in-out shadow-md"
+            >
+              Done
+            </button>
+            <button
+              id="cancelSketchBtn"
+              title="Cancel Sketch"
+              class="bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-4 rounded-xl transition duration-300 ease-in-out shadow-md"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="aiPromptModal" class="ai-prompt-modal-overlay hidden">
+        <div class="ai-prompt-modal-content w-96">
+          <h2 class="text-xl font-bold mb-4 text-white">
+            How would you like to continue?
+          </h2>
+          <textarea
+            id="aiPromptInput"
+            class="w-full p-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/70 focus:ring-2 focus:ring-white/50 focus:outline-none"
+            rows="4"
+            placeholder="e.g., 'Summarize the key points,' 'Expand on the last paragraph,' 'Write a concluding sentence about the future.'"
+          ></textarea>
+          <div class="flex justify-end gap-3 mt-4">
+            <button
+              id="aiPromptGenerateBtn"
+              class="bg-purple-500/80 hover:bg-purple-600 text-white font-medium py-2 px-4 rounded-xl transition duration-300 ease-in-out shadow-md"
+            >
+              Generate
+            </button>
+            <button
+              id="aiPromptCancelBtn"
+              class="bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-4 rounded-xl transition duration-300 ease-in-out shadow-md"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Template Modal -->
+      <div id="aiTemplateModal" class="ai-template-modal-overlay hidden">
+        <div class="ai-template-modal-content w-96">
+          <h2 class="text-xl font-bold mb-4 text-white">
+            Describe the note template you want to generate:
+          </h2>
+          <textarea
+            id="aiTemplateInput"
+            class="w-full p-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/70 focus:ring-2 focus:ring-white/50 focus:outline-none"
+            rows="4"
+            placeholder="e.g., 'a meeting agenda for a project kickoff', 'a travel packing list for a trip to Hawaii'"
+          ></textarea>
+          <div class="flex justify-end gap-3 mt-4">
+            <button
+              id="aiTemplateGenerateBtn"
+              class="bg-yellow-500/80 hover:bg-yellow-600 text-white font-medium py-2 px-4 rounded-xl transition duration-300 ease-in-out shadow-md"
+            >
+              Generate Template
+            </button>
+            <button
+              id="aiTemplateCancelBtn"
+              class="bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-4 rounded-xl transition duration-300 ease-in-out shadow-md"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="tutorialOverlay" class="tutorial-overlay hidden">
+        <div class="tutorial-content">
+          <p id="tutorialText" class="tutorial-text"></p>
+          <div class="tutorial-buttons">
+            <button id="tutorialPrevBtn" disabled>Previous</button>
+            <button id="tutorialNextBtn">Next</button>
+            <button id="tutorialCloseBtn">Close Tutorial</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const mainContainer = document.getElementById("mainContainer");
+      const notesListElement = document.getElementById("notesList");
+      const newNoteBtn = document.getElementById("newNoteBtn");
+      const saveNoteBtn = document.getElementById("saveNoteBtn");
+      const deleteNoteBtn = document.getElementById("deleteNoteBtn");
+      const noteTitleInput = document.getElementById("noteTitle");
+      const noteContentEditable = document.getElementById("noteContent");
+      const searchInput = document.getElementById("searchInput");
+      const checklistBtn = document.getElementById("checklistBtn");
+      const addSketchBtn = document.getElementById("addSketchBtn");
+      const formattingToolbar = document.getElementById("formattingToolbar");
+      const newNoteAndListWrapper = document.getElementById(
+        "newNoteAndListWrapper"
+      );
+      const aiCorrectBtn = document.getElementById("aiCorrectBtn");
+      const aiCompleteBtn = document.getElementById("aiCompleteBtn");
+      const aiTemplateBtn = document.getElementById("aiTemplateBtn"); // New button
+      const aiLoadingIndicator = document.getElementById("aiLoadingIndicator");
+
+      // Custom Message/Confirmation Modal
+      const customMessageModal = document.getElementById("customMessageModal");
+      const customMessageText = document.getElementById("customMessageText");
+      const customMessageConfirmBtn = document.getElementById(
+        "customMessageConfirmBtn"
+      );
+      const customMessageCloseBtn = document.getElementById(
+        "customMessageCloseBtn"
+      );
+
+      const sketchModal = document.getElementById("sketchModal");
+      const sketchCanvas = document.getElementById("sketchCanvas");
+      const sketchCtx = sketchCanvas.getContext("2d");
+      const colorPicker = document.getElementById("colorPicker");
+      const lineWidthInput = document.getElementById("lineWidth");
+      const eraserBtn = document.getElementById("eraserBtn");
+      const clearSketchBtn = document.getElementById("clearSketchBtn");
+      const saveSketchBtn = document.getElementById("saveSketchBtn");
+      const cancelSketchBtn = document.getElementById("cancelSketchBtn");
+
+      // AI Prompt Modal elements
+      const aiPromptModal = document.getElementById("aiPromptModal");
+      const aiPromptInput = document.getElementById("aiPromptInput");
+      const aiPromptGenerateBtn = document.getElementById(
+        "aiPromptGenerateBtn"
+      );
+      const aiPromptCancelBtn = document.getElementById("aiPromptCancelBtn");
+
+      // AI Template Modal elements
+      const aiTemplateModal = document.getElementById("aiTemplateModal");
+      const aiTemplateInput = document.getElementById("aiTemplateInput");
+      const aiTemplateGenerateBtn = document.getElementById(
+        "aiTemplateGenerateBtn"
+      );
+      const aiTemplateCancelBtn = document.getElementById(
+        "aiTemplateCancelBtn"
+      );
+
+      const darkModeToggle = document.getElementById("darkModeToggle");
+      const sunIcon = document.getElementById("sunIcon");
+      const moonIcon = document.getElementById("moonIcon");
+      const tutorialButton = document.getElementById("tutorialButton");
+
+      const fullscreenToggleBtn = document.getElementById(
+        "fullscreenToggleBtn"
+      );
+      const fullscreenEnterIcon = document.getElementById(
+        "fullscreenEnterIcon"
+      );
+      const fullscreenExitIcon = document.getElementById("fullscreenExitIcon");
+      const leftPane = document.querySelector(".left-pane");
+      const rightPane = document.querySelector(".right-pane");
+      const mobileBackButton = document.getElementById("mobileBackButton");
+
+      // Tutorial elements
+      const tutorialOverlay = document.getElementById("tutorialOverlay");
+      const tutorialText = document.getElementById("tutorialText");
+      const tutorialPrevBtn = document.getElementById("tutorialPrevBtn");
+      const tutorialNextBtn = document.getElementById("tutorialNextBtn");
+      const tutorialCloseBtn = document.getElementById("tutorialCloseBtn");
+
+      let notes = [];
+      let currentNoteId = null;
+      let originalCurrentNoteId = null; // Store state before tutorial
+      let originalNotesData = []; // Store a copy of notes array before tutorial
+
+      let isDrawing = false;
+      let lastX = 0;
+      let lastY = 0;
+      let brushColor = "#000000";
+      let brushSize = 3;
+      let isErasing = false;
+      let isFullScreen = false;
+      let isMobileView = window.innerWidth < 768;
+      let tutorialActive = false;
+
+      // Gemini API Key - This will be injected by the environment
+      const GEMINI_API_KEY = "";
+      const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+      // Global variable to store context for solving
+      let lastEquationContext = {
+        expression: null,
+        insertionRange: null, // Will store the range where the solution should be inserted
+      };
+
+      // --- Custom Message / Confirmation Logic ---
+      function showCustomMessage(
+        message,
+        isConfirmation = false,
+        onConfirm = null
+      ) {
+        customMessageText.innerHTML = message;
+        customMessageConfirmBtn.classList.add("hidden");
+        customMessageConfirmBtn.onclick = null;
+        customMessageCloseBtn.onclick = () => {
+          hideCustomMessage();
+        };
+
+        if (isConfirmation) {
+          customMessageConfirmBtn.classList.remove("hidden");
+          customMessageConfirmBtn.onclick = () => {
+            if (onConfirm) onConfirm();
+            hideCustomMessage();
+          };
+        }
+
+        customMessageModal.classList.remove("hidden");
+        customMessageModal.style.animation = "fadeIn 0.3s ease-out forwards";
+        customMessageModal.querySelector(
+          ".custom-alert-modal-content"
+        ).style.animation =
+          "fadeInScale 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards";
+      }
+
+      function hideCustomMessage() {
+        customMessageModal.style.animation =
+          "fadeOutScale 0.3s ease-in forwards";
+        customMessageModal.querySelector(
+          ".custom-alert-modal-content"
+        ).style.animation = "fadeOutScale 0.3s ease-in forwards";
+        setTimeout(() => {
+          customMessageModal.classList.add("hidden");
+          customMessageModal.style.animation = "";
+          customMessageModal.querySelector(
+            ".custom-alert-modal-content"
+          ).style.animation = "";
+        }, 300);
+      }
+
+      // --- Utility Functions ---
+
+      // Simple HTML Sanitizer to prevent XSS from user input or AI output
+      function sanitizeHTML(htmlString) {
+        const tempDiv = document.createElement("div");
+        tempDiv.innerHTML = htmlString;
+
+        // Remove script tags
+        const scripts = tempDiv.getElementsByTagName("script");
+        while (scripts.length > 0) {
+          scripts[0].parentNode.removeChild(scripts[0]);
+        }
+
+        // Remove dangerous attributes (e.g., event handlers)
+        const allElements = tempDiv.querySelectorAll("*");
+        allElements.forEach((el) => {
+          Array.from(el.attributes).forEach((attr) => {
+            if (
+              attr.name.startsWith("on") ||
+              attr.name.includes("javascript:")
+            ) {
+              el.removeAttribute(attr.name);
+            }
+          });
+        });
+
+        // Prevent image onerror/onload
+        tempDiv.querySelectorAll("img").forEach((img) => {
+          img.removeAttribute("onerror");
+          img.removeAttribute("onload");
+        });
+
+        return tempDiv.innerHTML;
+      }
+
+      // Debounce function
+      function debounce(func, delay) {
+        let timeout;
+        return function (...args) {
+          const context = this;
+          clearTimeout(timeout);
+          timeout = setTimeout(() => func.apply(context, args), delay);
+        };
+      }
+
+      // Function to clean AI responses by removing conversational filler and leading repetitions
+      function cleanAiResponse(responseText, originalContext = "") {
+        let cleanedText = responseText.trim();
+
+        // Remove common conversational prefixes
+        const conversationalPrefixes = [
+          "here is the corrected text:",
+          "certainly, i can help with that.",
+          "sure, i can generate this for you.",
+          "here's the continuation:",
+          "as a continuation of your note:",
+          "here is a possible continuation:",
+          "the corrected text is:",
+          "here is your request:",
+          "of course, here is the corrected text:",
+          "i've corrected the text for you:",
+          "here is the corrected version:",
+          "the continuation is:",
+          "here's a possible continuation for your note:",
+          "the generated note template is:", // For AI Template
+          "here's your note template:", // For AI Template
+          "here is a detailed note about", // For AI Template
+          "here's a template for a note on", // For AI Template
+          "here's a note template based on your criteria:", // For AI Template
+          "note template:", // For AI Template
+        ];
+
+        for (const prefix of conversationalPrefixes) {
+          if (cleanedText.toLowerCase().startsWith(prefix)) {
+            cleanedText = cleanedText.substring(prefix.length).trim();
+          }
+        }
+
+        // Remove leading repetition of original content (especially for AI Complete)
+        if (
+          originalContext &&
+          cleanedText
+            .toLowerCase()
+            .startsWith(originalContext.toLowerCase().trim())
+        ) {
+          cleanedText = cleanedText
+            .substring(originalContext.trim().length)
+            .trim();
+        }
+
+        return cleanedText;
+      }
+
+      // Function to convert simple markdown-like text to HTML
+      function convertMarkdownToHtml(markdownText) {
+        let html = markdownText;
+
+        // Convert headings (e.g., # Heading, ## Subheading)
+        html = html.replace(/^###\s*(.*)$/gm, "<h3>$1</h3>");
+        html = html.replace(/^##\s*(.*)$/gm, "<h2>$1</h2>");
+        html = html.replace(/^#\s*(.*)$/gm, "<h1>$1</h1>");
+
+        // Convert bold (**text**)
+        html = html.replace(/\*\*(.*?)\*\*/g, "<b>$1</b>");
+        // Convert italic (*text*)
+        html = html.replace(/\*(.*?)\*/g, "<i>$1</i>");
+        // Convert underline (__text__)
+        html = html.replace(/__(.*?)__/g, "<u>$1</u>");
+        // Convert strikethrough (~~text~~)
+        html = html.replace(/~~(.*?)~~/g, "<strike>$1</strike>");
+
+        // Convert list items (* Item or - Item)
+        // This is more complex to wrap in <ul>. First, convert individual list items.
+        // Then, detect consecutive list items and wrap them in <ul>.
+        let lines = html.split("\n");
+        let inList = false;
+        let processedLines = [];
+
+        lines.forEach((line) => {
+          const trimmedLine = line.trim();
+          if (trimmedLine.match(/^(\*|-)\s/)) {
+            const listItemContent = trimmedLine.substring(
+              trimmedLine.indexOf(" ") + 1
+            );
+            if (!inList) {
+              processedLines.push("<ul>");
+              inList = true;
+            }
+            processedLines.push(
+              `<li role="checkbox" aria-checked="false">${listItemContent}</li>`
+            );
+          } else {
+            if (inList) {
+              processedLines.push("</ul>");
+              inList = false;
+            }
+            if (trimmedLine) {
+              // Wrap non-list lines in <p> if they are not already a heading
+              if (!trimmedLine.match(/<h[1-6]>/i)) {
+                // Check if already a heading
+                processedLines.push(`<p>${trimmedLine}</p>`);
+              } else {
+                processedLines.push(trimmedLine); // Keep headings as is
+              }
+            } else {
+              processedLines.push("<p>&nbsp;</p>"); // Preserve empty lines as paragraphs
+            }
+          }
+        });
+
+        if (inList) {
+          processedLines.push("</ul>");
+        }
+
+        // Join lines and normalize empty paragraphs from consecutive newlines
+        html = processedLines
+          .join("\n")
+          .replace(/<p>&nbsp;<\/p>\n*<p>&nbsp;<\/p>/g, "<p>&nbsp;</p>");
+
+        return html;
+      }
+
+      function generateUUID() {
+        return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
+          /[xy]/g,
+          function (c) {
+            var r = (Math.random() * 16) | 0,
+              v = c == "x" ? r : (r & 0x3) | 0x8;
+            return v.toString(16);
+          }
+        );
+      }
+
+      function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      }
+
+      function saveNotes() {
+        localStorage.setItem("appleNotesClone", JSON.stringify(notes));
+      }
+
+      function loadNotes() {
+        const storedNotes = localStorage.getItem("appleNotesClone");
+        if (storedNotes) {
+          notes = JSON.parse(storedNotes);
+        }
+      }
+
+      function saveDarkModePreference(isDark) {
+        localStorage.setItem("darkMode", isDark ? "dark" : "light");
+      }
+
+      function loadDarkModePreference() {
+        return localStorage.getItem("darkMode");
+      }
+
+      // --- UI Rendering ---
+
+      function renderNotesList(filterText = "") {
+        notesListElement.innerHTML = "";
+
+        let filteredNotes = notes;
+        if (filterText) {
+          const lowerCaseFilter = filterText.toLowerCase();
+          filteredNotes = notes.filter(
+            (note) =>
+              note.title.toLowerCase().includes(lowerCaseFilter) ||
+              note.content.toLowerCase().includes(lowerCaseFilter)
+          );
+        }
+
+        if (filteredNotes.length === 0 && filterText) {
+          notesListElement.innerHTML = `<p class="text-white/70 text-center mt-4">No matching notes found.</p>`;
+          return;
+        } else if (
+          filteredNotes.length === 0 &&
+          !filterText &&
+          notes.length === 0
+        ) {
+          return;
+        }
+
+        filteredNotes.sort(
+          (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
+        );
+
+        filteredNotes.forEach((note) => {
+          const noteItem = document.createElement("div");
+          noteItem.classList.add(
+            "note-item",
+            "glass-effect",
+            "p-4",
+            "mb-3",
+            "rounded-xl",
+            "cursor-pointer",
+            "hover:bg-white/20",
+            "transition",
+            "duration-200",
+            "shadow-sm"
+          );
+          noteItem.setAttribute("data-id", note.id);
+
+          if (note.id === currentNoteId) {
+            noteItem.classList.add("bg-white/20");
+          }
+
+          notesListElement.appendChild(noteItem);
+          // Sanitize content for display in list preview
+          const previewContent = sanitizeHTML(note.content)
+            .replace(/<[^>]*>/g, "")
+            .replace(/<img[^>]*>/g, "[Image]")
+            .substring(0, 50);
+
+          noteItem.innerHTML = `
+                    <h3 class="text-lg font-medium text-white mb-1 whitespace-nowrap overflow-hidden text-ellipsis">${
+                      note.title || "Untitled Note"
+                    }</h3>
+                    <p class="text-sm text-white/70 mb-1 whitespace-nowrap overflow-hidden text-ellipsis">${previewContent}${
+            note.content.length > 50 ? "..." : ""
+          }</p>
+                    <span class="text-xs text-white/50">${formatDate(
+                      note.updatedAt
+                    )}</span>
+                `;
+        });
+      }
+
+      function selectNote(id) {
+        currentNoteId = id;
+        const note = notes.find((n) => n.id === id);
+        if (note) {
+          noteTitleInput.value = note.title;
+          noteTitleInput.placeholder = "Untitled Note";
+          noteContentEditable.innerHTML = sanitizeHTML(note.content); // Sanitize content on load
+          enableEditing();
+          renderNotesList(searchInput.value);
+          updateFormattingButtonStates(); // Update button states after loading note
+        }
+      }
+
+      function enableEditing() {
+        noteTitleInput.disabled = false;
+        noteContentEditable.disabled = false;
+        noteContentEditable.focus();
+
+        noteTitleInput.style.display = "";
+        noteContentEditable.style.display = "";
+        formattingToolbar.style.display = "";
+        saveNoteBtn.style.display = "";
+        deleteNoteBtn.style.display = "";
+
+        fullscreenToggleBtn.disabled = false;
+        if (!isMobileView) {
+          fullscreenToggleBtn.style.display = "inline-flex";
+        } else {
+          fullscreenToggleBtn.style.display = "none";
+        }
+
+        if (isMobileView) {
+          mobileBackButton.style.display = "flex";
+        } else {
+          mobileBackButton.style.display = "none";
+        }
+
+        mainContainer.classList.remove("no-notes");
+        mainContainer.classList.remove("mobile-note-active");
+        leftPane.classList.remove("w-full");
+        rightPane.classList.remove("w-full");
+        leftPane.classList.remove("md:w-full");
+        leftPane.classList.remove("md:w-1/3");
+        rightPane.classList.remove("md:w-2/3");
+
+        if (isMobileView) {
+          leftPane.style.display = "none";
+          rightPane.style.display = "flex";
+          rightPane.classList.add("w-full");
+        } else {
+          leftPane.style.display = "flex";
+          rightPane.style.display = "flex";
+          leftPane.classList.add("md:w-1/3");
+          rightPane.classList.add("md:w-2/3");
+        }
+
+        newNoteAndListWrapper.classList.remove(
+          "flex-grow",
+          "justify-center",
+          "items-center"
+        );
+        notesListElement.style.flexGrow = "1";
+        notesListElement.style.display = "";
+        notesListElement.style.flexDirection = "";
+        notesListElement.style.justifyContent = "";
+        notesListElement.style.alignItems = "";
+        newNoteBtn.style.marginTop = "";
+        newNoteBtn.style.marginBottom = "";
+
+        if (!tutorialActive) {
+          toggleInteractiveElements(true);
+        }
+      }
+
+      function disableEditing() {
+        currentNoteId = null;
+        noteTitleInput.disabled = true;
+        noteContentEditable.disabled = true;
+        fullscreenToggleBtn.disabled = true;
+
+        noteTitleInput.value = "";
+        noteContentEditable.innerHTML = "";
+        noteTitleInput.placeholder = "Select a note or create a new one...";
+
+        noteTitleInput.style.display = "none";
+        noteContentEditable.style.display = "none";
+        formattingToolbar.style.display = "none";
+        saveNoteBtn.style.display = "none";
+        deleteNoteBtn.style.display = "none";
+        fullscreenToggleBtn.style.display = "none";
+        mobileBackButton.style.display = "none";
+
+        if (notes.length === 0) {
+          mainContainer.classList.add("no-notes");
+          rightPane.style.display = "none";
+          leftPane.style.display = "flex";
+          leftPane.classList.add("w-full", "md:w-full");
+          notesListElement.innerHTML = `<p class="text-white/70 text-center mt-4">No notes yet. Click 'New Note' to get started!</p>`;
+        } else {
+          mainContainer.classList.remove("no-notes");
+          mainContainer.classList.remove("mobile-note-active");
+          leftPane.style.display = "flex";
+          leftPane.classList.add("md:w-1/3");
+          rightPane.style.display = "flex";
+          rightPane.classList.add("md:w-2/3");
+        }
+
+        if (isFullScreen) {
+          toggleFullscreen();
+        }
+
+        if (!tutorialActive) {
+          toggleInteractiveElements(false);
+        }
+        updateFormattingButtonStates(); // Clear button states when no note is selected
+      }
+
+      function toggleInteractiveElements(enable) {
+        const interactiveElements = [
+          saveNoteBtn,
+          deleteNoteBtn,
+          noteTitleInput,
+          searchInput,
+          checklistBtn,
+          addSketchBtn,
+          aiCorrectBtn,
+          aiCompleteBtn,
+          aiTemplateBtn,
+          fullscreenToggleBtn,
+          mobileBackButton,
+          document.getElementById("boldButton"),
+          document.getElementById("italicButton"),
+          document.getElementById("underlineButton"),
+          document.getElementById("strikethroughButton"),
+          aiPromptGenerateBtn,
+          aiTemplateGenerateBtn, // Add AI generate buttons to control
+        ];
+
+        // These buttons should always be enabled, regardless of note selection
+        const alwaysEnabledElements = [
+          newNoteBtn,
+          darkModeToggle,
+          tutorialButton,
+        ];
+
+        interactiveElements.forEach((element) => {
+          if (element) {
+            element.disabled = !enable;
+            element.style.pointerEvents = enable ? "auto" : "none";
+          }
+        });
+        noteContentEditable.contentEditable = enable ? "true" : "false";
+
+        // Ensure always enabled elements are always active
+        alwaysEnabledElements.forEach((element) => {
+          if (element) {
+            element.disabled = false;
+            element.style.pointerEvents = "auto";
+          }
+        });
+
+        if (notesListElement) {
+          if (tutorialActive) {
+            notesListElement.style.pointerEvents = "none"; // Controlled by tutorial
+          } else {
+            notesListElement.style.pointerEvents = "auto"; // Always clickable outside tutorial
+          }
+        }
+      }
+
+      // --- Note Actions ---
+
+      function createNewNote() {
+        currentNoteId = generateUUID();
+        const now = new Date().toISOString();
+        const newNote = {
+          id: currentNoteId,
+          title: "",
+          content: "",
+          createdAt: now,
+          updatedAt: now,
+        };
+        notes.unshift(newNote);
+        saveNotes();
+
+        mainContainer.classList.remove("no-notes");
+        selectNote(currentNoteId);
+        noteTitleInput.focus();
+      }
+
+      function saveCurrentNote() {
+        if (!currentNoteId) return;
+
+        const noteIndex = notes.findIndex((n) => n.id === currentNoteId);
+        if (noteIndex !== -1) {
+          notes[noteIndex].title = noteTitleInput.value;
+          notes[noteIndex].content = noteContentEditable.innerHTML; // Content is saved as HTML
+          notes[noteIndex].updatedAt = new Date().toISOString();
+          saveNotes();
+          renderNotesList(searchInput.value);
+        }
+      }
+
+      function deleteCurrentNote() {
+        if (!currentNoteId) return;
+
+        showCustomMessage(
+          "Are you sure you want to delete this note?",
+          true,
+          () => {
+            notes = notes.filter((n) => n.id !== currentNoteId);
+            saveNotes();
+            currentNoteId = null;
+            disableEditing();
+            renderNotesList(searchInput.value);
+          }
+        );
+      }
+
+      // --- Formatting Functions ---
+
+      function formatText(command) {
+        document.execCommand(command, false, null);
+        noteContentEditable.focus();
+        updateFormattingButtonStates(); // Update button state immediately after command
+      }
+
+      function toggleChecklist() {
+        const selection = window.getSelection();
+        if (!selection.rangeCount) return;
+
+        const range = selection.getRangeAt(0);
+        let effectiveNode =
+          range.startContainer.nodeType === Node.TEXT_NODE
+            ? range.startContainer.parentNode
+            : range.startContainer;
+
+        let parentLi = null;
+        if (effectiveNode && effectiveNode.nodeType === Node.ELEMENT_NODE) {
+          parentLi = effectiveNode.closest('li[role="checkbox"]');
+        }
+
+        if (parentLi && noteContentEditable.contains(parentLi)) {
+          // If already a checklist item, toggle its state
+          const isCompleted = parentLi.getAttribute("aria-checked") === "true";
+          parentLi.setAttribute("aria-checked", (!isCompleted).toString());
+        } else {
+          // If not a checklist item, convert current block to one
+          const newListItem = document.createElement("li");
+          newListItem.setAttribute("role", "checkbox");
+          newListItem.setAttribute("aria-checked", "false");
+
+          const selectedText = selection.toString().trim();
+
+          if (selectedText) {
+            newListItem.innerHTML = sanitizeHTML(selectedText); // Sanitize content
+            range.deleteContents();
+            range.insertNode(newListItem);
+          } else {
+            let currentBlock = effectiveNode.closest("p, div");
+            if (currentBlock && noteContentEditable.contains(currentBlock)) {
+              newListItem.innerHTML =
+                sanitizeHTML(currentBlock.innerHTML) || "&nbsp;"; // Sanitize content
+              currentBlock.parentNode.replaceChild(newListItem, currentBlock);
+            } else {
+              newListItem.innerHTML = "&nbsp;";
+              range.insertNode(newListItem);
+            }
+          }
+
+          // Ensure it's within a UL
+          let parentUl = newListItem.parentNode;
+          if (!parentUl || parentUl.tagName !== "UL") {
+            const ul = document.createElement("ul");
+            newListItem.parentNode.insertBefore(ul, newListItem);
+            ul.appendChild(newListItem);
+            parentUl = ul;
+          }
+
+          const newRange = document.createRange();
+          newRange.selectNodeContents(newListItem);
+          newRange.collapse(false);
+          selection.removeAllRanges();
+          selection.addRange(newRange);
+        }
+        saveCurrentNote();
+        updateFormattingButtonStates(); // Update button state immediately after command
+      }
+
+      // Function to toggle individual checklist item state
+      function toggleChecklistItemState(listItem) {
+        if (
+          listItem &&
+          listItem.getAttribute("role") === "checkbox" &&
+          noteContentEditable.contains(listItem)
+        ) {
+          const isCompleted = listItem.getAttribute("aria-checked") === "true";
+          listItem.setAttribute("aria-checked", (!isCompleted).toString());
+          saveCurrentNote();
+        }
+      }
+
+      // Function to update formatting button states based on current selection
+      function updateFormattingButtonStates() {
+        const boldBtn = document.getElementById("boldButton");
+        const italicBtn = document.getElementById("italicButton");
+        const underlineBtn = document.getElementById("underlineButton");
+        const strikethroughBtn = document.getElementById("strikethroughButton");
+        const checklistBtn = document.getElementById("checklistBtn");
+
+        // Reset all buttons first
+        document
+          .querySelectorAll(".format-btn")
+          .forEach((btn) => btn.classList.remove("active-format"));
+        checklistBtn.classList.remove("active-format");
+
+        if (noteContentEditable.disabled) {
+          return; // No active formatting if editing is disabled
+        }
+
+        if (document.queryCommandState("bold")) {
+          boldBtn.classList.add("active-format");
+        }
+        if (document.queryCommandState("italic")) {
+          italicBtn.classList.add("active-format");
+        }
+        if (document.queryCommandState("underline")) {
+          underlineBtn.classList.add("active-format");
+        }
+        if (document.queryCommandState("strikeThrough")) {
+          // Note the camelCase
+          strikethroughBtn.classList.add("active-format");
+        }
+
+        // For checklist, check if the parent node is a checklist item
+        const selection = window.getSelection();
+        if (selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          const currentNode =
+            range.startContainer.nodeType === Node.TEXT_NODE
+              ? range.startContainer.parentNode
+              : range.startContainer;
+          const parentChecklistItem = currentNode.closest(
+            'li[role="checkbox"]'
+          );
+          if (
+            parentChecklistItem &&
+            noteContentEditable.contains(parentChecklistItem)
+          ) {
+            checklistBtn.classList.add("active-format");
+          }
+        }
+      }
+
+      // --- Markdown Live Formatting ---
+      function applyMarkdownFormatting() {
+        if (!noteContentEditable.disabled) {
+          const selection = window.getSelection();
+          const range =
+            selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+          const caretPosition = range ? range.startOffset : 0;
+          const parentNode = range ? range.startContainer : noteContentEditable;
+
+          let html = noteContentEditable.innerHTML;
+
+          // These markdown formats are handled here
+          html = html.replace(
+            /<p>(#+)\s(.*?)<\/p>/g,
+            (match, hashes, content) => {
+              const level = hashes.length;
+              if (level >= 1 && level <= 3) {
+                return `<h${level}>${sanitizeHTML(content)}</h${level}>`; // Sanitize heading content
+              }
+              return match;
+            }
+          );
+
+          // Do not apply ** and * replacements here, as they are handled by formatting buttons and live updates
+          // This ensures consistency and avoids conflicts with contenteditable's native formatting.
+          // html = html.replace(/\*\*([^*]+?)\*\*(?![*])/g, '<b>$1</b>');
+          // html = html.replace(/\*([^*]+?)\*(?![*])/g, '<i>$1</i>');
+
+          // This block should only be used if we're doing live Markdown *parsing* in the contenteditable,
+          // which can conflict with execCommand. For now, execCommand and button states are primary.
+          /*
+                if (noteContentEditable.innerHTML !== html) {
+                    noteContentEditable.innerHTML = sanitizeHTML(html); // Sanitize the entire HTML after markdown
+                    if (range) {
+                        const newRange = document.createRange();
+                        try {
+                            newRange.setStart(parentNode, caretPosition);
+                            newRange.collapse(true);
+                            selection.removeAllRanges();
+                            selection.addRange(newRange);
+                        } catch (e) {
+                            noteContentEditable.focus();
+                        }
+                    }
+                }
+                */
+        }
+      }
+
+      // --- AI Functions ---
+      async function callGeminiAPI(prompt) {
+        aiLoadingIndicator.classList.add("active");
+        // Disable AI buttons during processing
+        aiCorrectBtn.disabled = true;
+        aiCompleteBtn.disabled = true;
+        aiTemplateBtn.disabled = true; // Disable new template button
+        aiPromptGenerateBtn.disabled = true;
+        aiTemplateGenerateBtn.disabled = true; // Disable template generate button
+
+        try {
+          let chatHistory = [];
+          chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+          const payload = { contents: chatHistory };
+
+          const response = await fetch(GEMINI_API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(
+              `API error: ${response.status} ${response.statusText} - ${
+                errorData.error ? errorData.error.message : "Unknown error"
+              }`
+            );
+          }
+
+          const result = await response.json();
+          if (
+            result.candidates &&
+            result.candidates.length > 0 &&
+            result.candidates[0].content &&
+            result.candidates[0].content.parts &&
+            result.candidates[0].content.parts.length > 0
+          ) {
+            return result.candidates[0].content.parts[0].text;
+          } else {
+            console.error("Gemini API response structure unexpected:", result);
+            return "Error: Could not get AI response. Please try again.";
+          }
+        } catch (error) {
+          console.error("Error calling Gemini API:", error);
+          return `Error: ${error.message || "Failed to connect to AI."}`;
+        } finally {
+          aiLoadingIndicator.classList.remove("active");
+          // Re-enable AI buttons after processing
+          aiCorrectBtn.disabled = false;
+          aiCompleteBtn.disabled = false;
+          aiTemplateBtn.disabled = false;
+          if (!aiPromptModal.classList.contains("hidden")) {
+            aiPromptGenerateBtn.disabled = false; // Re-enable if modal is open
+          } else {
+            // if modal is closed, ensure button is properly managed by toggleInteractiveElements
+            toggleInteractiveElements(currentNoteId != null);
+          }
+          if (!aiTemplateModal.classList.contains("hidden")) {
+            aiTemplateGenerateBtn.disabled = false; // Re-enable if modal is open
+          } else {
+            toggleInteractiveElements(currentNoteId != null);
+          }
+        }
+      }
+
+      async function aiCorrectText() {
+        if (noteContentEditable.disabled) return;
+
+        const selection = window.getSelection();
+        let textToCorrect = "";
+        let isSelection = false;
+
+        if (selection.rangeCount > 0 && !selection.isCollapsed) {
+          textToCorrect = selection.toString();
+          isSelection = true;
+        } else {
+          textToCorrect = noteContentEditable.innerText;
+        }
+
+        if (!textToCorrect.trim()) {
+          showCustomMessage("Nothing to correct. Please type some text first.");
+          return;
+        }
+
+        const prompt = `Correct the grammar, spelling, and punctuation of the following text. Do not add any new content, just correct what's there:\n\n"${textToCorrect}"`;
+        let correctedText = await callGeminiAPI(prompt);
+
+        if (correctedText.startsWith("Error:")) {
+          showCustomMessage(correctedText);
+        } else {
+          correctedText = cleanAiResponse(correctedText); // Clean the response
+          // For AI Correct, since it's replacing existing content, it will only do minimal markdown.
+          // We don't want to convert all markdown if it's just correcting plain text.
+          // Assuming correctedText will be mostly plain text or already formatted HTML elements.
+          if (isSelection) {
+            document.execCommand(
+              "insertText",
+              false,
+              sanitizeHTML(correctedText)
+            ); // Sanitize inserted text
+          } else {
+            noteContentEditable.innerHTML = sanitizeHTML(correctedText); // Sanitize entire content
+          }
+          saveCurrentNote();
+        }
+      }
+
+      async function openAiCompleteModal() {
+        if (noteContentEditable.disabled) return;
+
+        const currentText = noteContentEditable.innerText.trim();
+        if (!currentText) {
+          showCustomMessage(
+            "Please type some text in the note before asking for completion."
+          );
+          return;
+        }
+
+        aiPromptInput.value = ""; // Clear previous input
+        aiPromptModal.classList.remove("hidden");
+        aiPromptModal.style.animation = "fadeIn 0.3s ease-out forwards";
+        aiPromptModal.querySelector(
+          ".ai-prompt-modal-content"
+        ).style.animation =
+          "fadeInScale 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards";
+        aiPromptInput.focus();
+        aiPromptGenerateBtn.disabled = false; // Ensure generate button is enabled when modal opens
+      }
+
+      async function handleAiCompletion() {
+        const userInstructions = aiPromptInput.value.trim();
+        if (!userInstructions) {
+          showCustomMessage(
+            "Please provide instructions for the AI completion."
+          );
+          return;
+        }
+
+        closeAiPromptModal(); // Close the prompt modal first
+        const currentText = noteContentEditable.innerText; // Get the full text as context
+        const prompt = `Given the following note content, ${userInstructions}. Provide only the continuation, without repeating the original content:\n\nNote Content: "${currentText}"\n\nContinuation based on instructions:`;
+
+        let completion = await callGeminiAPI(prompt);
+
+        if (completion.startsWith("Error:")) {
+          showCustomMessage(completion);
+        } else {
+          completion = cleanAiResponse(completion, currentText); // Clean the response, passing original context
+          // For AI Complete, convert the generated plain text completion to HTML
+          completion = convertMarkdownToHtml(completion);
+          noteContentEditable.innerHTML += " " + sanitizeHTML(completion); // Sanitize added completion
+        }
+        saveCurrentNote();
+        noteContentEditable.focus();
+        // Move cursor to the end
+        const range = document.createRange();
+        range.selectNodeContents(noteContentEditable);
+        range.collapse(false);
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
+
+      function closeAiPromptModal() {
+        aiPromptModal.style.animation = "fadeOutScale 0.3s ease-in forwards";
+        aiPromptModal.querySelector(
+          ".ai-prompt-modal-content"
+        ).style.animation = "fadeOutScale 0.3s ease-in forwards";
+        setTimeout(() => {
+          aiPromptModal.classList.add("hidden");
+          aiPromptModal.style.animation = "";
+          aiPromptModal.querySelector(
+            ".ai-prompt-modal-content"
+          ).style.animation = "";
+        }, 300);
+        aiPromptGenerateBtn.disabled = true; // Disable generate button when modal closes
+      }
+
+      async function openAiTemplateModal() {
+        if (noteContentEditable.disabled) {
+          // Can generate a template even if no note is selected
+          // If no note is selected, create a new one automatically
+          if (!currentNoteId) {
+            createNewNote(); // This will enable editing and select the new note
+          }
+        }
+        aiTemplateInput.value = ""; // Clear previous input
+        aiTemplateModal.classList.remove("hidden");
+        aiTemplateModal.style.animation = "fadeIn 0.3s ease-out forwards";
+        aiTemplateModal.querySelector(
+          ".ai-template-modal-content"
+        ).style.animation =
+          "fadeInScale 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards";
+        aiTemplateInput.focus();
+        aiTemplateGenerateBtn.disabled = false; // Ensure generate button is enabled when modal opens
+      }
+
+      async function handleAiTemplateGeneration() {
+        const userCriteria = aiTemplateInput.value.trim();
+        if (!userCriteria) {
+          showCustomMessage(
+            "Please describe the note template you want to generate."
+          );
+          return;
+        }
+
+        closeAiTemplateModal(); // Close the template modal first
+
+        // If a note isn't already active (e.g., if user clicked template without creating/selecting a note)
+        if (!currentNoteId) {
+          createNewNote();
+        }
+
+        const prompt = `Generate a detailed note template about: "${userCriteria}". Structure it with relevant sections, headings, and bullet points. Focus on the core content of the template, no conversational preamble.`;
+
+        let generatedContent = await callGeminiAPI(prompt);
+
+        if (generatedContent.startsWith("Error:")) {
+          showCustomMessage(generatedContent);
+        } else {
+          generatedContent = cleanAiResponse(generatedContent); // Clean the response
+          generatedContent = convertMarkdownToHtml(generatedContent); // Convert markdown to HTML
+
+          // Attempt to infer a title from the first line or use a default
+          let title = "AI Generated Template";
+          const tempDivForTitle = document.createElement("div");
+          tempDivForTitle.innerHTML = generatedContent;
+          const firstHeading = tempDivForTitle.querySelector("h1, h2, h3");
+          const firstParagraph = tempDivForTitle.querySelector("p");
+
+          if (
+            firstHeading &&
+            firstHeading.innerText.trim().length > 0 &&
+            firstHeading.innerText.trim().length < 100
+          ) {
+            title = firstHeading.innerText.trim();
+            // Remove the heading from the content if it was used as a title
+            firstHeading.remove();
+            generatedContent = tempDivForTitle.innerHTML;
+          } else if (
+            firstParagraph &&
+            firstParagraph.innerText.trim().length > 0 &&
+            firstParagraph.innerText.trim().length < 100
+          ) {
+            title = firstParagraph.innerText.trim();
+          }
+
+          noteTitleInput.value = title;
+          noteContentEditable.innerHTML = sanitizeHTML(generatedContent); // Sanitize and set content
+        }
+        saveCurrentNote();
+        noteContentEditable.focus();
+        updateFormattingButtonStates(); // Update button states after new content
+      }
+
+      function closeAiTemplateModal() {
+        aiTemplateModal.style.animation = "fadeOutScale 0.3s ease-in forwards";
+        aiTemplateModal.querySelector(
+          ".ai-template-modal-content"
+        ).style.animation = "fadeOutScale 0.3s ease-in forwards";
+        setTimeout(() => {
+          aiTemplateModal.classList.add("hidden");
+          aiTemplateModal.style.animation = "";
+          aiTemplateModal.querySelector(
+            ".ai-template-modal-content"
+          ).style.animation = "";
+        }, 300);
+        aiTemplateGenerateBtn.disabled = true; // Disable generate button when modal closes
+      }
+
+      // --- Sketching Functions ---
+      function openSketchModal() {
+        sketchModal.classList.remove("hidden");
+        sketchModal.style.animation = "fadeIn 0.3s ease-out forwards";
+        sketchModal.querySelector(".sketch-modal-content").style.animation =
+          "fadeInScale 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards";
+
+        // Set canvas dimensions after it's visible to ensure correct sizing
+        setTimeout(() => {
+          sketchCanvas.width = sketchCanvas.offsetWidth;
+          sketchCanvas.height = sketchCanvas.offsetHeight;
+          clearSketchCanvas();
+          sketchCtx.lineWidth = brushSize;
+          sketchCtx.strokeStyle = brushColor;
+          sketchCtx.lineCap = "round";
+          sketchCtx.lineJoin = "round";
+        }, 0); // Small delay to allow modal to render before getting offsetWidth/Height
+      }
+
+      function closeSketchModal() {
+        sketchModal.style.animation = "fadeOutScale 0.3s ease-in forwards";
+        sketchModal.querySelector(".sketch-modal-content").style.animation =
+          "fadeOutScale 0.3s ease-in forwards";
+        setTimeout(() => {
+          sketchModal.classList.add("hidden");
+          sketchModal.style.animation = ""; // Reset animation
+          sketchModal.querySelector(".sketch-modal-content").style.animation =
+            ""; // Reset animation
+        }, 300);
+      }
+
+      function startDrawing(e) {
+        isDrawing = true;
+        [lastX, lastY] = getCanvasCoordinates(e);
+      }
+
+      function draw(e) {
+        if (!isDrawing) return;
+        const [x, y] = getCanvasCoordinates(e);
+
+        sketchCtx.beginPath();
+        if (isErasing) {
+          sketchCtx.globalCompositeOperation = "destination-out";
+          sketchCtx.lineWidth = 15;
+        } else {
+          sketchCtx.globalCompositeOperation = "source-over";
+          sketchCtx.lineWidth = brushSize;
+          sketchCtx.strokeStyle = brushColor;
+        }
+        sketchCtx.moveTo(lastX, lastY);
+        sketchCtx.lineTo(x, y);
+        sketchCtx.stroke();
+        [lastX, lastY] = [x, y];
+      }
+
+      function stopDrawing() {
+        isDrawing = false;
+        sketchCtx.closePath();
+      }
+
+      function getCanvasCoordinates(e) {
+        const rect = sketchCanvas.getBoundingClientRect();
+        let clientX, clientY;
+        if (e.touches && e.touches.length > 0) {
+          clientX = e.touches[0].clientX;
+          clientY = e.touches[0].clientY;
+        } else {
+          clientX = e.clientX;
+          clientY = e.clientY;
+        }
+        return [clientX - rect.left, clientY - rect.top];
+      }
+
+      function clearSketchCanvas() {
+        sketchCtx.clearRect(0, 0, sketchCanvas.width, sketchCanvas.height);
+      }
+
+      function saveSketch() {
+        const imageData = sketchCanvas.toDataURL("image/png");
+        const img = document.createElement("img");
+        img.src = imageData;
+        img.alt = "User Sketch";
+        img.classList.add("my-2", "rounded-lg", "shadow-md");
+        img.style.maxWidth = "100%";
+
+        const selection = window.getSelection();
+        if (selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          range.deleteContents();
+          // insertNode for image is generally safe as it's a programmatic creation
+          range.insertNode(img);
+          range.setEndAfter(img);
+          range.collapse(false);
+          selection.removeAllRanges();
+          selection.addRange(range);
+        } else {
+          noteContentEditable.appendChild(img);
+        }
+        saveCurrentNote();
+        closeSketchModal();
+      }
+
+      // --- Dark Mode Toggle Logic ---
+      function toggleDarkMode() {
+        const isDark = document.body.classList.toggle("dark");
+        saveDarkModePreference(isDark);
+        updateDarkModeIcons(isDark);
+      }
+
+      function updateDarkModeIcons(isDark) {
+        if (isDark) {
+          sunIcon.classList.add("hidden");
+          moonIcon.classList.remove("hidden");
+        } else {
+          sunIcon.classList.remove("hidden");
+          moonIcon.classList.add("hidden");
+        }
+      }
+
+      // --- Full Screen Toggle Logic (Desktop Only) ---
+      function toggleFullscreen() {
+        if (isMobileView) return;
+
+        isFullScreen = !isFullScreen;
+        mainContainer.classList.toggle("fullscreen", isFullScreen);
+
+        if (isFullScreen) {
+          fullscreenEnterIcon.classList.add("hidden");
+          fullscreenExitIcon.classList.remove("hidden");
+        } else {
+          fullscreenEnterIcon.classList.remove("hidden");
+          fullscreenExitIcon.classList.add("hidden");
+        }
+        renderNotesList(searchInput.value);
+      }
+
+      // --- Mobile Back to Notes List Logic ---
+      function backToNotesList() {
+        saveCurrentNote();
+        currentNoteId = null;
+        mainContainer.classList.remove("mobile-note-active");
+        disableEditing();
+        renderNotesList(searchInput.value);
+      }
+
+      // --- Tutorial Mode Logic ---
+      let currentTutorialStep = 0;
+      let tutorialNoteId = "tutorial-note-12345"; // Fixed ID for the tutorial note
+
+      const tutorialNoteContent = `
+            <h1>Welcome to your interactive tutorial!</h1>
+            <p>This note is here to help you learn all the **awesome features** of this app. Let's get started!</p>
+            <p>You can make text <i>italic</i> or <u>underline</u> parts of your sentences. You can even <strike>strike through</strike> text you no longer need.</p>
+            <ul>
+                <li role="checkbox" aria-checked="false">This is an item for your checklist. Press Spacebar to check me!</li>
+                <li role="checkbox" aria-checked="false">Another task to check off.</li>
+            </ul>
+            <p>Here's a sentence that might need **correction**. This sentence has a few grammer erors and missplelings.</p>
+            <p>To try AI completion, place your cursor at the end of this sentence and click the 'AI Complete' button. The story begins:</p>
+            <p>In a quiet village, nestled between rolling hills and a winding river, stood an old, weathered lighthouse. Its beacon had guided ships for centuries, a silent sentinel against the unpredictable sea. One stormy night, as the waves crashed against the cliffs, a lone figure emerged from the darkness...</p>
+            <p>You can also add drawings anywhere in your note using the sketch tool.</p>
+            <p>You can also solve math equations! Try typing: 2 * (10 + 5) = </p>
+        `;
+
+      function getDynamicTutorialSteps() {
+        const steps = [
+          {
+            text: "Welcome to your Notes app! Let's take a quick tour. We've loaded a special note for this tutorial.",
+            highlightId: null,
+          },
+          {
+            text: "This is your main Notes List. All your notes will appear here. During the tutorial, it's temporarily hidden on mobile when a note is active.",
+            highlightId: "leftPane",
+          },
+          {
+            text: "Use the Search bar to quickly find your notes by title or content. Try typing something!",
+            highlightId: "searchInput",
+          },
+          {
+            text: "Click 'New Note' to create a brand new note and start writing. (During the tutorial, this will not create a real note).",
+            highlightId: "newNoteBtn",
+          },
+          {
+            text: "Click the moon/sun icon to switch between light and dark themes. Try it now!",
+            highlightId: "darkModeToggle",
+          },
+          {
+            text: "This is the note title input. You can edit the title of your note here. Try typing a new title for this tutorial note!",
+            highlightId: "noteTitle",
+          },
+          {
+            text: "This is the main content area for your notes. You can type freely here. Try selecting the word 'awesome features' and click the BOLD button on the toolbar.",
+            highlightId: "noteContent",
+          },
+          {
+            text: "These are your formatting tools. Use them to make text bold, italic, underline, or strikethrough. Try selecting 'italic' and clicking the ITALIC button.",
+            highlightId: "formattingToolbar", // Highlight the whole toolbar
+            subHighlightId: "italicButton", // Specific button within toolbar
+          },
+          {
+            text: "The Checklist button lets you add interactive to-do lists to your notes. Try clicking the checkbox next to 'This is an item for your checklist' or pressing spacebar on it to mark it complete!",
+            highlightId: "checklistBtn",
+          },
+          {
+            text: "Add drawings or handwritten notes using the Sketch tool. Click the pencil icon to open the sketch pad.",
+            highlightId: "addSketchBtn",
+          },
+          {
+            text: "Use 'AI Correct' to fix grammar, spelling, and punctuation. Select the sentence 'This sentence has a few grammer erors and missplelings.' and click 'AI Correct'.",
+            highlightId: "aiCorrectBtn",
+          },
+          {
+            text: "Let 'AI Complete' help you finish your thoughts by suggesting text. Place your cursor at the end of the story in this note and click 'AI Complete'.",
+            highlightId: "aiCompleteBtn",
+          },
+          {
+            text: "Generate entire note templates based on your criteria with 'AI Template'. Click it to open the template generator.",
+            highlightId: "aiTemplateBtn",
+          },
+        ];
+
+        // Add platform-specific navigation steps
+        if (isMobileView) {
+          steps.push({
+            text: "On mobile, use this 'Back to Notes' button to return to your notes list. Your current note will be auto-saved.",
+            highlightId: "mobileBackButton",
+          });
+        } else {
+          steps.push({
+            text: "On desktop, use this button to toggle full-screen mode for a distraction-free writing experience. Try it!",
+            highlightId: "fullscreenToggleBtn",
+          });
+        }
+
+        steps.push(
+          {
+            text: "Remember to click 'Save Note' to manually save your changes. Your notes also auto-save when you switch or go back.",
+            highlightId: "saveNoteBtn",
+          },
+          {
+            text: "If you need to remove a note, click 'Delete Note'. Be careful, this action is permanent!",
+            highlightId: "deleteNoteBtn",
+          },
+          {
+            text: "That's it! You're ready to start taking notes. Enjoy!",
+            highlightId: null,
+          }
+        );
+        return steps;
+      }
+
+      // Helper to place tutorial highlight
+      let highlightElement = null;
+      function applyHighlight(elementId) {
+        if (!highlightElement) {
+          highlightElement = document.createElement("div");
+          highlightElement.classList.add("tutorial-highlight");
+          tutorialOverlay.appendChild(highlightElement);
+        }
+
+        const targetElement = document.getElementById(elementId);
+        if (targetElement) {
+          const rect = targetElement.getBoundingClientRect();
+          highlightElement.style.width = `${rect.width}px`;
+          highlightElement.style.height = `${rect.height}px`;
+          highlightElement.style.top = `${rect.top}px`;
+          highlightElement.style.left = `${rect.left}px`;
+          highlightElement.classList.add("active"); // Enable pointer events for active highlight
+        } else {
+          // If element not found (e.g., mobile-only button on desktop), hide highlight
+          highlightElement.classList.remove("active");
+        }
+      }
+
+      function removeHighlight() {
+        if (highlightElement) {
+          highlightElement.classList.remove("active");
+        }
+      }
+
+      function startTutorial() {
+        tutorialActive = true;
+
+        // Save any current note changes before starting tutorial
+        if (currentNoteId) {
+          saveCurrentNote();
+        }
+        originalCurrentNoteId = currentNoteId; // Save current note state
+        originalNotesData = JSON.parse(
+          localStorage.getItem("appleNotesClone") || "[]"
+        ); // Deep copy of real notes
+
+        toggleInteractiveElements(false); // Disable all app interactions
+
+        // Create and load the tutorial note
+        const now = new Date().toISOString();
+        const tutorialNote = {
+          id: tutorialNoteId,
+          title: "Your First Tutorial Note!",
+          content: tutorialNoteContent,
+          createdAt: now,
+          updatedAt: now,
+        };
+
+        // Temporarily set notes to only the tutorial note for display during tutorial
+        notes = [tutorialNote];
+        renderNotesList(); // Re-render list to show tutorial note as the only one
+        selectNote(tutorialNoteId); // Select the tutorial note
+        noteTitleInput.value = tutorialNote.title; // Ensure title is set
+        noteContentEditable.innerHTML = sanitizeHTML(tutorialNote.content); // Ensure content is set and sanitized
+
+        // For mobile, force the note active view during tutorial
+        if (isMobileView) {
+          mainContainer.classList.add("mobile-note-active");
+        } else {
+          // On desktop, ensure both panes are visible for tutorial
+          leftPane.style.display = "flex";
+          rightPane.style.display = "flex";
+        }
+
+        tutorialOverlay.classList.remove("hidden");
+        currentTutorialStep = 0;
+        showTutorialStep(currentTutorialStep);
+      }
+
+      function showTutorialStep(stepIndex) {
+        const steps = getDynamicTutorialSteps();
+        if (stepIndex < 0 || stepIndex >= steps.length) {
+          endTutorial();
+          return;
+        }
+
+        removeHighlight(); // Clear previous highlight
+
+        const step = steps[stepIndex];
+        tutorialText.textContent = step.text;
+
+        // Apply new highlight if specified
+        if (step.highlightId) {
+          // Special handling for the search input container to highlight correctly
+          const highlightTargetId =
+            step.highlightId === "searchInput"
+              ? "searchBarContainer"
+              : step.highlightId;
+          applyHighlight(highlightTargetId);
+        }
+
+        tutorialPrevBtn.disabled = stepIndex === 0;
+        tutorialNextBtn.disabled = stepIndex === steps.length - 1;
+
+        // Manual re-check of current view to ensure layout for tutorial
+        if (isMobileView) {
+          // If current step requires note active view on mobile, ensure it's active
+          if (
+            step.highlightId &&
+            (step.highlightId === "noteTitle" ||
+              step.highlightId === "noteContent" ||
+              step.highlightId === "formattingToolbar" ||
+              step.highlightId === "saveNoteBtn" ||
+              step.highlightId === "deleteNoteBtn" ||
+              step.highlightId === "mobileBackButton" ||
+              step.highlightId === "aiCorrectBtn" ||
+              step.highlightId === "aiCompleteBtn" ||
+              step.highlightId === "addSketchBtn" ||
+              step.highlightId === "checklistBtn" ||
+              step.highlightId === "aiTemplateBtn")
+          ) {
+            mainContainer.classList.add("mobile-note-active");
+          } else {
+            mainContainer.classList.remove("mobile-note-active");
+          }
+        } else {
+          // On desktop, ensure both panes are always visible during tutorial
+          leftPane.style.display = "flex";
+          rightPane.style.display = "flex";
+          mainContainer.classList.remove("mobile-note-active");
+        }
+      }
+
+      function nextTutorialStep() {
+        currentTutorialStep++;
+        showTutorialStep(currentTutorialStep);
+      }
+
+      function prevTutorialStep() {
+        currentTutorialStep--;
+        showTutorialStep(currentTutorialStep);
+      }
+
+      function endTutorial() {
+        tutorialActive = false;
+        tutorialOverlay.classList.add("hidden");
+        removeHighlight(); // Ensure highlight is removed
+
+        // Restore original state of notes and current note
+        notes = originalNotesData; // Restore original notes array
+        saveNotes(); // Save the restored notes
+
+        if (
+          originalCurrentNoteId &&
+          notes.some((n) => n.id === originalCurrentNoteId)
+        ) {
+          selectNote(originalCurrentNoteId);
+        } else if (notes.length > 0) {
+          selectNote(notes[0].id); // Select the latest available note
+        } else {
+          disableEditing();
+        }
+        toggleInteractiveElements(true); // Re-enable all interactive elements
+      }
+
+      // --- Event Listeners ---
+      function setupEventListeners() {
+        newNoteBtn.addEventListener("click", createNewNote);
+        saveNoteBtn.addEventListener("click", saveCurrentNote);
+        deleteNoteBtn.addEventListener("click", deleteCurrentNote);
+        notesListElement.addEventListener("click", (event) => {
+          const noteItem = event.target.closest(".note-item");
+          if (noteItem) {
+            selectNote(noteItem.getAttribute("data-id"));
+          }
+        });
+        noteTitleInput.addEventListener("input", saveCurrentNote);
+        noteContentEditable.addEventListener("input", handleNoteContentInput); // Combined handler
+
+        // Update formatting button states when selection changes within the editable area
+        noteContentEditable.addEventListener(
+          "mouseup",
+          updateFormattingButtonStates
+        );
+        noteContentEditable.addEventListener(
+          "keyup",
+          updateFormattingButtonStates
+        );
+
+        // Handle checklist click on the checkbox pseudo-element
+        noteContentEditable.addEventListener("click", (event) => {
+          const targetLi = event.target.closest('li[role="checkbox"]');
+          if (
+            targetLi &&
+            noteContentEditable.contains(targetLi) &&
+            event.offsetX < 25
+          ) {
+            // Check if click is near the pseudo-checkbox area
+            event.preventDefault(); // Prevent default text selection if clicking checkbox
+            toggleChecklistItemState(targetLi);
+          }
+        });
+
+        // Handle checklist keydown for Spacebar on checklist items
+        noteContentEditable.addEventListener("keydown", (event) => {
+          if (event.key === " ") {
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0) {
+              const range = selection.getRangeAt(0);
+              const focusedNode =
+                range.startContainer.nodeType === Node.ELEMENT_NODE
+                  ? range.startContainer
+                  : range.startContainer.parentNode;
+              const targetLi = focusedNode.closest('li[role="checkbox"]');
+              if (targetLi && noteContentEditable.contains(targetLi)) {
+                event.preventDefault(); // Prevent space from inserting a space
+                toggleChecklistItemState(targetLi);
+              }
+            }
+          }
+        });
+
+        formattingToolbar.addEventListener("click", (event) => {
+          const button = event.target.closest(".format-btn");
+          if (button) {
+            formatText(button.getAttribute("data-command"));
+          }
+        });
+        checklistBtn.addEventListener("click", toggleChecklist);
+        addSketchBtn.addEventListener("click", openSketchModal);
+        aiCorrectBtn.addEventListener("click", aiCorrectText);
+        aiCompleteBtn.addEventListener("click", openAiCompleteModal); // Open modal on click
+        aiTemplateBtn.addEventListener("click", openAiTemplateModal); // Open new AI Template modal
+
+        aiPromptGenerateBtn.addEventListener("click", handleAiCompletion); // Handle generation
+        aiPromptCancelBtn.addEventListener("click", closeAiPromptModal); // Close prompt modal
+
+        aiTemplateGenerateBtn.addEventListener(
+          "click",
+          handleAiTemplateGeneration
+        ); // Handle new template generation
+        aiTemplateCancelBtn.addEventListener("click", closeAiTemplateModal); // Close new template modal
+
+        // Debounced search input
+        const debouncedRenderNotesList = debounce(
+          (value) => renderNotesList(value),
+          300
+        );
+        searchInput.addEventListener("input", (event) => {
+          debouncedRenderNotesList(event.target.value);
+        });
+
+        // Sketch Modal Events
+        sketchCanvas.addEventListener("mousedown", startDrawing);
+        sketchCanvas.addEventListener("mousemove", draw);
+        sketchCanvas.addEventListener("mouseup", stopDrawing);
+        sketchCanvas.addEventListener("mouseout", stopDrawing);
+        sketchCanvas.addEventListener("touchstart", (e) => {
+          e.preventDefault();
+          startDrawing(e);
+        });
+        sketchCanvas.addEventListener("touchmove", (e) => {
+          e.preventDefault();
+          draw(e);
+        });
+        sketchCanvas.addEventListener("touchend", stopDrawing);
+        sketchCanvas.addEventListener("touchcancel", stopDrawing);
+        colorPicker.addEventListener("input", (e) => {
+          brushColor = e.target.value;
+          isErasing = false;
+        });
+        lineWidthInput.addEventListener("input", (e) => {
+          brushSize = parseInt(e.target.value);
+        });
+        eraserBtn.addEventListener("click", () => {
+          isErasing = true;
+        });
+        clearSketchBtn.addEventListener("click", clearSketchCanvas);
+        saveSketchBtn.addEventListener("click", saveSketch);
+        cancelSketchBtn.addEventListener("click", closeSketchModal);
+
+        // Global resize for canvas
+        window.addEventListener("resize", () => {
+          isMobileView = window.innerWidth < 768;
+          if (!sketchModal.classList.contains("hidden")) {
+            // Re-draw canvas content on resize to maintain aspect ratio/drawing if modal is open
+            const imgData = sketchCtx.getImageData(
+              0,
+              0,
+              sketchCanvas.width,
+              sketchCanvas.height
+            );
+            sketchCanvas.width = sketchCanvas.offsetWidth;
+            sketchCanvas.height = sketchCanvas.offsetHeight;
+            sketchCtx.putImageData(imgData, 0, 0);
+            sketchCtx.lineWidth = brushSize;
+            sketchCtx.strokeStyle = brushColor;
+            sketchCtx.lineCap = "round";
+            sketchCtx.lineJoin = "round";
+          }
+          // Only adjust main app layout if tutorial is not active
+          if (!tutorialActive) {
+            if (isMobileView) {
+              if (currentNoteId) {
+                mainContainer.classList.add("mobile-note-active");
+                leftPane.style.display = "none";
+                rightPane.style.display = "flex";
+              } else {
+                mainContainer.classList.remove("mobile-note-active");
+                disableEditing();
+              }
+              fullscreenToggleBtn.style.display = "none";
+            } else {
+              mainContainer.classList.remove("mobile-note-active");
+              if (currentNoteId) {
+                enableEditing();
+              } else {
+                disableEditing();
+              }
+              fullscreenToggleBtn.style.display = "inline-flex";
+            }
+          } else {
+            // If tutorial is active, re-show current step to re-evaluate layout for highlight
+            showTutorialStep(currentTutorialStep);
+          }
+          renderNotesList(searchInput.value);
+        });
+
+        darkModeToggle.addEventListener("click", toggleDarkMode);
+        fullscreenToggleBtn.addEventListener("click", toggleFullscreen);
+        mobileBackButton.addEventListener("click", backToNotesList);
+
+        // Tutorial Event Listeners
+        tutorialButton.addEventListener("click", startTutorial);
+        tutorialNextBtn.addEventListener("click", nextTutorialStep);
+        tutorialPrevBtn.addEventListener("click", prevTutorialStep);
+        tutorialCloseBtn.addEventListener("click", endTutorial);
+      }
+
+      // Handler for all note content input events (debounced for equation detection)
+      function handleNoteContentInput() {
+        saveCurrentNote(); // Always save on input
+        applyMarkdownFormatting(); // Apply markdown
+        debouncedCheckForEquation(); // Check for equations
+      }
+
+      // Debounced function to check for equations
+      const debouncedCheckForEquation = debounce(() => {
+        // Do not trigger if any modals are open
+        if (
+          !customMessageModal.classList.contains("hidden") ||
+          !aiPromptModal.classList.contains("hidden") ||
+          !aiTemplateModal.classList.contains("hidden") ||
+          !sketchModal.classList.contains("hidden")
+        ) {
+          return;
+        }
+
+        const selection = window.getSelection();
+        if (
+          !selection.rangeCount ||
+          !noteContentEditable.contains(selection.anchorNode)
+        ) {
+          return;
+        }
+
+        const range = selection.getRangeAt(0);
+
+        // Get the text content of the node containing the caret
+        let currentNode = range.startContainer;
+        let currentTextContent = "";
+
+        if (currentNode.nodeType === Node.TEXT_NODE) {
+          currentTextContent = currentNode.textContent;
+        } else {
+          // If cursor is not directly in a text node, try to get text from the closest block element.
+          let blockElement = currentNode.closest("p, div, li, h1, h2, h3");
+          if (blockElement && noteContentEditable.contains(blockElement)) {
+            currentTextContent = blockElement.innerText;
+          } else {
+            // Fallback for root level text directly in contentEditable
+            currentTextContent = noteContentEditable.innerText;
+          }
+        }
+
+        // Get the substring of the current line/block up to the caret position
+        let textBeforeCaret = currentTextContent.substring(
+          0,
+          range.startOffset
+        );
+
+        // Regex to detect "expression =" at the very end of the current text before caret
+        // Captures numbers, operators, parentheses, and spaces before the '='.
+        const equationRegex = /([\d\s\+\-\*\/\.\(\)]+)\s*=\s*$/;
+        const match = textBeforeCaret.match(equationRegex);
+
+        if (match && match[1]) {
+          const expression = match[1].trim();
+
+          // Basic validation for allowed characters in the expression
+          if (!/^[0-9\s\+\-\*\/\.\(\)]+$/.test(expression)) {
+            console.warn(
+              "Detected non-math characters in expression, skipping solve:",
+              expression
+            );
+            lastEquationContext.expression = null; // Clear context
+            lastEquationContext.insertionRange = null;
+            return;
+          }
+
+          // Store context and show message only if not already processing this equation
+          if (
+            !lastEquationContext.expression ||
+            lastEquationContext.expression !== expression
+          ) {
+            // Check if new equation
+            lastEquationContext.expression = expression;
+            lastEquationContext.insertionRange = range.cloneRange(); // Clone to preserve the current range
+            showCustomMessage(
+              "Equation detected, want me to solve?",
+              true,
+              solveAndInsertEquation
+            );
+          }
+        } else {
+          // If no equation pattern found or equation was removed, clear context
+          lastEquationContext.expression = null;
+          lastEquationContext.insertionRange = null;
+        }
+      }, 700); // Increased debounce time for less frequent checks
+
+      // Function to safely evaluate math expression
+      function solveEquationExpression(expression) {
+        try {
+          // Safely evaluate the expression using Function constructor
+          // This is generally safer than direct eval() for arithmetic expressions
+          const result = new Function("return (" + expression + ")")();
+
+          if (
+            typeof result === "number" &&
+            !isNaN(result) &&
+            isFinite(result)
+          ) {
+            return result.toString();
+          }
+          return "Error";
+        } catch (e) {
+          console.error("Error evaluating expression:", expression, e);
+          return "Error";
+        }
+      }
+
+      // Function to solve the equation and insert the result
+      function solveAndInsertEquation() {
+        if (
+          !lastEquationContext.expression ||
+          !lastEquationContext.insertionRange
+        ) {
+          showCustomMessage("Error: No equation context found to solve.");
+          return;
+        }
+
+        const expression = lastEquationContext.expression;
+        const insertionRange = lastEquationContext.insertionRange;
+
+        const result = solveEquationExpression(expression);
+
+        if (result !== "Error") {
+          const selection = window.getSelection();
+          selection.removeAllRanges(); // Clear current selection
+          selection.addRange(insertionRange); // Restore the specific range for insertion
+
+          // Insert the result at the current caret position (which is right after '=')
+          document.execCommand("insertText", false, result);
+
+          saveCurrentNote();
+        } else {
+          showCustomMessage(
+            "Could not solve the equation. Please check its format (e.g., '2+2=')."
+          );
+        }
+
+        // Reset the context after solving
+        lastEquationContext.expression = null;
+        lastEquationContext.insertionRange = null;
+      }
+
+      // --- Initialization ---
+      function init() {
+        loadNotes();
+
+        const savedMode = loadDarkModePreference();
+        if (
+          savedMode === "dark" ||
+          (savedMode === null &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches)
+        ) {
+          document.body.classList.add("dark");
+          updateDarkModeIcons(true);
+        } else {
+          document.body.classList.remove("dark");
+          updateDarkModeIcons(false);
+        }
+
+        setupEventListeners();
+
+        isMobileView = window.innerWidth < 768;
+
+        if (notes.length > 0) {
+          renderNotesList();
+          if (!isMobileView) {
+            selectNote(notes[0].id);
+          } else {
+            disableEditing();
+            mainContainer.classList.remove("no-notes");
+          }
+        } else {
+          disableEditing();
+          mainContainer.classList.add("no-notes");
+        }
+
+        // Ensure newNoteBtn, darkModeToggle, and tutorialButton are always enabled on init
+        if (newNoteBtn) {
+          newNoteBtn.disabled = false;
+          newNoteBtn.style.pointerEvents = "auto";
+        }
+        if (darkModeToggle) {
+          darkModeToggle.disabled = false;
+          darkModeToggle.style.pointerEvents = "auto";
+        }
+        if (tutorialButton) {
+          tutorialButton.disabled = false;
+          tutorialButton.style.pointerEvents = "auto";
+        }
+
+        updateFormattingButtonStates(); // Set initial state of formatting buttons
+      }
+
+      document.addEventListener("DOMContentLoaded", init);
+    </script>
+  </body>
+</html>
